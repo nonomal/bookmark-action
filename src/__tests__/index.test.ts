@@ -1,7 +1,7 @@
 import { action } from "..";
 import * as github from "@actions/github";
 import * as core from "@actions/core";
-import { exportVariable, setFailed } from "@actions/core";
+import { setFailed } from "@actions/core";
 import pen15 from "./fixtures/pen15.json";
 import ogs from "open-graph-scraper";
 import { promises } from "fs";
@@ -25,11 +25,8 @@ describe("bookmark", () => {
     Object.defineProperty(github, "context", {
       value: {
         payload: {
-          issue: {
-            title: "https://katydecorah.com",
-            body: "note",
-            number: 1,
-          },
+          url: "https://katydecorah.com",
+          notes: "note",
         },
       },
     });
@@ -49,12 +46,6 @@ describe("bookmark", () => {
     const writeFileSpy = jest.spyOn(promises, "writeFile").mockImplementation();
 
     await action();
-    expect(exportVariable).toHaveBeenNthCalledWith(
-      1,
-      "DateBookmarked",
-      new Date().toISOString().slice(0, 10)
-    );
-    expect(exportVariable).toHaveBeenNthCalledWith(2, "IssueNumber", 1);
     expect(setFailed).not.toHaveBeenCalled();
     expect(writeFileSpy.mock.calls[0]).toEqual([
       "_data/recipes.yml",
@@ -90,11 +81,8 @@ describe("bookmark", () => {
     Object.defineProperty(github, "context", {
       value: {
         payload: {
-          issue: {
-            title: "https://katydecorah.com",
-            body: "note",
-            number: 1,
-          },
+          url: "https://katydecorah.com",
+          notes: "note",
         },
       },
     });
@@ -106,21 +94,8 @@ describe("bookmark", () => {
       .mockRejectedValueOnce({ message: "Error" });
 
     await action();
-    expect(exportVariable).toHaveBeenNthCalledWith(
-      1,
-      "DateBookmarked",
-      new Date().toISOString().slice(0, 10)
-    );
-    expect(exportVariable).toHaveBeenNthCalledWith(2, "IssueNumber", 1);
     expect(setFailed).toHaveBeenNthCalledWith(1, "Error");
     expect(setFailed).toHaveBeenNthCalledWith(2, "Unable to add bookmark");
-  });
-
-  test("throws, can't get issue", async () => {
-    // eslint-disable-next-line no-import-assign
-    Object.defineProperty(github, "context", {});
-    await action();
-    expect(setFailed).toHaveBeenCalledWith("Cannot find GitHub issue");
   });
 
   test("throws, invalid url", async () => {
@@ -128,26 +103,20 @@ describe("bookmark", () => {
     Object.defineProperty(github, "context", {
       value: {
         payload: {
-          issue: {
-            title: "boop",
-            number: 1,
-          },
+          url: "boop",
         },
       },
     });
     await action();
-    expect(setFailed).toHaveBeenCalledWith('The url "undefined" is not valid');
+    expect(setFailed).toHaveBeenCalled();
   });
   test("throws, can't write file", async () => {
     // eslint-disable-next-line no-import-assign
     Object.defineProperty(github, "context", {
       value: {
         payload: {
-          issue: {
-            title: "https://katydecorah.com",
-            body: "note",
-            number: 1,
-          },
+          url: "https://katydecorah.com",
+          notes: "note",
         },
       },
     });

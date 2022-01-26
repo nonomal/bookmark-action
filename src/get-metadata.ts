@@ -4,16 +4,14 @@ import { setImage } from "./set-image";
 
 export async function getMetadata({
   url,
-  body,
-  date,
+  notes,
 }: {
   url: string;
-  body?: string;
-  date: string;
+  notes?: string;
 }) {
   const { result } = (await ogs({ url })) as { result: OpenGraphObject };
+  const date = new Date().toISOString().slice(0, 10);
   exportVariable("BookmarkTitle", result.ogTitle);
-  exportVariable("DateBookmarked", date);
   const image = setImage(result);
   return {
     title: result.ogTitle || "",
@@ -23,7 +21,7 @@ export async function getMetadata({
     url: result.ogUrl,
     image: image || "",
     type: result.ogType || "",
-    ...(body && { notes: body }),
+    ...(notes && { notes }),
   };
 }
 

@@ -52297,44 +52297,6 @@ __nccwpck_require__.d(__webpack_exports__, {
 var core = __nccwpck_require__(2186);
 // EXTERNAL MODULE: ./node_modules/@actions/github/lib/github.js
 var github = __nccwpck_require__(5438);
-;// CONCATENATED MODULE: ./src/utils.ts
-
-// Credit: https://gist.github.com/mathewbyrne/1280286
-function slugify(text) {
-    return text
-        .toString()
-        .toLowerCase()
-        .replace(/\s+/g, "-")
-        .replace(/[^\w-]+/g, "")
-        .replace(/--+/g, "-")
-        .replace(/^-+/, "")
-        .replace(/-+$/, "");
-}
-function titleParser(title) {
-    const split = title.split(" ");
-    const url = isUrl(split[0]) ? split[0] : undefined;
-    const date = isDate(split[1])
-        ? split[1]
-        : new Date().toISOString().slice(0, 10);
-    (0,core.exportVariable)("DateBookmarked", date);
-    return {
-        url,
-        date,
-    };
-}
-/** Validate that string is in correct date format */
-function dateFormat(date) {
-    return date.match(/^\d{4}-\d{2}-\d{2}$/) != null;
-}
-/** Validate that string is a date */
-function isDate(date) {
-    return !isNaN(Date.parse(date)) && dateFormat(date);
-}
-/** Validate that string is a url */
-function isUrl(url) {
-    return url.startsWith("http");
-}
-
 ;// CONCATENATED MODULE: external "fs/promises"
 const promises_namespaceObject = require("fs/promises");
 ;// CONCATENATED MODULE: ./node_modules/js-yaml/dist/js-yaml.mjs
@@ -56246,6 +56208,19 @@ function addBookmark(fileName, bookmark) {
 // EXTERNAL MODULE: ./node_modules/open-graph-scraper/index.js
 var open_graph_scraper = __nccwpck_require__(2990);
 var open_graph_scraper_default = /*#__PURE__*/__nccwpck_require__.n(open_graph_scraper);
+;// CONCATENATED MODULE: ./src/utils.ts
+// Credit: https://gist.github.com/mathewbyrne/1280286
+function slugify(text) {
+    return text
+        .toString()
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^\w-]+/g, "")
+        .replace(/--+/g, "-")
+        .replace(/^-+/, "")
+        .replace(/-+$/, "");
+}
+
 ;// CONCATENATED MODULE: ./src/set-image.ts
 
 
@@ -56279,13 +56254,13 @@ var get_metadata_awaiter = (undefined && undefined.__awaiter) || function (thisA
 
 
 
-function getMetadata({ url, body, date, }) {
+function getMetadata({ url, notes, }) {
     return get_metadata_awaiter(this, void 0, void 0, function* () {
         const { result } = (yield open_graph_scraper_default()({ url }));
+        const date = new Date().toISOString().slice(0, 10);
         (0,core.exportVariable)("BookmarkTitle", result.ogTitle);
-        (0,core.exportVariable)("DateBookmarked", date);
         const image = setImage(result);
-        return Object.assign({ title: result.ogTitle || "", site: result.ogSiteName || "", date, description: result.ogDescription || "", url: result.ogUrl, image: image || "", type: result.ogType || "" }, (body && { notes: body }));
+        return Object.assign({ title: result.ogTitle || "", site: result.ogSiteName || "", date, description: result.ogDescription || "", url: result.ogUrl, image: image || "", type: result.ogType || "" }, (notes && { notes }));
     });
 }
 
@@ -56304,23 +56279,16 @@ var src_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argu
 
 
 
-
 function action() {
     return src_awaiter(this, void 0, void 0, function* () {
         try {
-            if (!github.context.payload.issue) {
-                (0,core.setFailed)("Cannot find GitHub issue");
-                return;
-            }
-            const { title, number, body } = github.context.payload.issue;
-            const { url, date } = titleParser(title);
+            const { url, notes } = github.context.payload;
             if (!url) {
                 (0,core.setFailed)(`The url "${url}" is not valid`);
                 return;
             }
             const fileName = (0,core.getInput)("fileName");
-            (0,core.exportVariable)("IssueNumber", number);
-            const page = (yield getMetadata({ url, body, date }));
+            const page = (yield getMetadata({ url, notes }));
             const bookmarks = yield addBookmark(fileName, page);
             if (!bookmarks) {
                 (0,core.setFailed)(`Unable to add bookmark`);
