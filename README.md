@@ -21,8 +21,6 @@ jobs:
   add_bookmark:
     runs-on: macOS-latest
     name: Add bookmark
-    # only continue if issue has "recipe" label
-    if: contains( github.event.issue.labels.*.name, 'recipe')
     steps:
       - name: Checkout
         uses: actions/checkout@v2
