@@ -12,9 +12,10 @@ To use this action, create a new workflow in `.github/workflows` and modify it a
 
 ```yml
 name: Add bookmark
+
 on:
-  issues:
-    types: opened
+  repository_dispatch:
+    types: recipe
 
 jobs:
   add_bookmark:
@@ -37,11 +38,6 @@ jobs:
           git config --local user.name "GitHub Action"
           git add -A && git commit -m  "Added ${{ env.BookmarkTitle }} to recipes.yml"
           git push
-      - name: Close issue
-        uses: peter-evans/close-issue@v1
-        with:
-          issue-number: "${{ env.IssueNumber }}"
-          comment: "You bookmarked ${{ env.BookmarkTitle }} on ${{env.DateBookmarked}}."
 ```
 
 ## Action options
