@@ -2,7 +2,7 @@ name: Add bookmark
 
 on:
   repository_dispatch:
-    types: recipe
+    types: [recipe]
 
 jobs:
   add_bookmark:
