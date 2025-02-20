@@ -1,8 +1,10 @@
 {
   "compilerOptions": {
-    "target": "es2015",
-    "moduleResolution": "node",
-    "strictNullChecks": true
+    "target": "ESNext",
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
+    "strictNullChecks": true,
+    "allowSyntheticDefaultImports": true
   },
   "include": ["src/*.ts"]
 }

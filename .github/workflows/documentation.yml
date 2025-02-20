@@ -1,26 +1,35 @@
 name: Document GitHub action
+
 on:
   push:
     paths:
       - ".github/workflows/bookmarks.yml"
+      - ".github/workflows/bookmarks-advanced.yml"
+      - ".github/workflows/documentation.yml"
       - "action.yml"
       - "package.json"
       - "README.md"
 
+permissions:
+  contents: write
+
 jobs:
-  document_action:
-    runs-on: macOS-latest
+  documentation:
+    runs-on: ubuntu-latest
     name: Write documentation
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Documentation action
-        uses: katydecorah/documentation-action@v0.1.0
+        id: documentation
+        uses: katydecorah/documentation-action@v1.5.0
         with:
-          exampleWorkflowFile: "bookmarks.yml"
+          example-workflow-file: "bookmarks.yml"
+          additional-workflow-file-prefix: "bookmarks"
       - name: Commit files
-        if: env.UpdateDocumentation == 'true'
+        if: steps.documentation.outputs.update == 'true'
         run: |
+          git pull
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git commit -am "Update documentation"

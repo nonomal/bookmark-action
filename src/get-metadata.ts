@@ -1,32 +1,58 @@
-import { exportVariable, setFailed } from "@actions/core";
+import { exportVariable, getInput, warning } from "@actions/core";
 import ogs from "open-graph-scraper";
-import { setImage } from "./set-image";
+import { Bookmark } from "./add-bookmark.js";
+import { setImage } from "./set-image.js";
+import { checkWaybackStatus } from "./wayback.js";
 
 export async function getMetadata({
   url,
-  body,
+  notes,
   date,
+  timestamp,
+  tags,
+  additionalProperties,
 }: {
   url: string;
-  body?: string;
+  notes?: string;
   date: string;
-}) {
-  const { result, error } = await ogs({ url });
-  if (error) {
-    setFailed(`${result}`);
-    return;
+  timestamp: string;
+  tags?: string;
+  additionalProperties?: Record<string, string>;
+}): Promise<Bookmark | undefined> {
+  try {
+    const { result } = await ogs({ url });
+    exportVariable("BookmarkTitle", result.ogTitle);
+    exportVariable("DateBookmarked", date);
+    const image =
+      getInput("export-image") === "true" ? await setImage(result) : "";
+    const waybackResponse = await checkWaybackStatus(url);
+    const waybackUrl = waybackResponse?.archived_snapshots?.closest?.url;
+    if (!waybackUrl) {
+      warning(`No wayback url found for ${url}`);
+    }
+    return {
+      title: result.ogTitle || "",
+      site: result.ogSiteName || "",
+      author: result.author || "",
+      date,
+      timestamp,
+      description: result.ogDescription || "",
+      url: result.ogUrl || result.requestUrl || url,
+      image,
+      type: result.ogType || "",
+      ...(notes && { notes }),
+      ...(tags && { tags: toArray(tags) }),
+      ...(waybackUrl && {
+        waybackUrl,
+      }),
+      ...additionalProperties,
+    };
+  } catch (error) {
+    throw new Error(`Error getting metadata for ${url}: ${error.result.error}`);
   }
-  exportVariable("BookmarkTitle", result.ogTitle);
-  exportVariable("DateBookmarked", date);
-  const image = setImage(result);
-  return {
-    title: result.ogTitle || "",
-    site: result.ogSiteName || "",
-    date,
-    description: result.ogDescription || "",
-    url: result.ogUrl || result.requestUrl,
-    image: image || "",
-    type: result.ogType || "",
-    ...(body && { notes: body }),
-  };
+}
+
+export function toArray(input: string): string[] {
+  if (!input?.trim()) return [];
+  return input.split(",").map((item) => item.trim());
 }

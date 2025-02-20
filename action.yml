@@ -1,11 +1,17 @@
 name: Bookmark
 author: "@katydecorah"
-description: "Bookmark websites to a YAML file."
+description: "Bookmark websites to a JSON file."
 runs:
-  using: "node16"
+  using: node20
   main: dist/index.js
 
 inputs:
-  fileName:
+  filename:
     description: "The filename to save your bookmarks."
-    default: "_data/bookmarks.yml"
+    default: "_data/bookmarks.json"
+  export-image:
+    description: "Export the URL's `image` to download later and set `image` property."
+    default: "true"
+  additional-properties:
+    description: "Additional properties to add to the bookmark from the workflow payload formatted as a comma delimited string."
+    default: ""
